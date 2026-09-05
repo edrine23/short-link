@@ -1,0 +1,11 @@
+# Used by @SpringBootTest classes. Datasource connection details are supplied
+# dynamically by Testcontainers via @ServiceConnection — nothing to configure here.
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    com.edrine.shortlink: DEBUG
+    org.testcontainers: INFO

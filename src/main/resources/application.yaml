@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: short-link
+
+
+  jpa:
+    open-in-view: false   # avoid the OSIV antipattern; fetch what you need in the service layer
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+
+  jwt:
+    secret: ${JWT_SECRET}
+    access-expiration: ${JWT_ACCESS_EXPIRATION}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+#-------------- Actuator endpoint management--------------------------------
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+#-------------- Swagger UI ---------------------------------------------------
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+
+#-------------- Web server configs -------------------------------------------
+server:
+  port: ${SERVER_PORT:8080}

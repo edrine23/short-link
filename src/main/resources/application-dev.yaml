@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${POSTGRES_DB:shortlink}
+    username: ${DB_USER:shortlink}
+    password: ${DB_PASSWORD:shortlink}
+
+  jpa:
+    hibernate:
+      # Flyway owns schema evolution; Hibernate only verifies entities match it.
+      ddl-auto: validate
+    show-sql: true
+
+#--------------- Actuator management at dev stage---------------------------------
+management:
+  endpoint:
+    health:
+      show-details: always
+
+#--------------- logging configuration ----------------------------------------
+logging:
+  level:
+    com.edrine.shortlink: DEBUG
