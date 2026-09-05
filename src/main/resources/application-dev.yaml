@@ -19,4 +19,4 @@ management:
 #--------------- logging configuration ----------------------------------------
 logging:
   level:
-    com.edrine.shortlink: DEBUG
+    com.idipoedrine.shortlink: DEBUG
