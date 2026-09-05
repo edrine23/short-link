@@ -104,6 +104,13 @@
             <version>0.12.5</version>
         </dependency>
 
+        <!-- Junit 5 for testing -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Add here -->
 
 

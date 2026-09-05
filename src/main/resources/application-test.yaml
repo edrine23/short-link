@@ -7,5 +7,5 @@ spring:
 
 logging:
   level:
-    com.edrine.shortlink: DEBUG
+    com.idipoedrine.shortlink: DEBUG
     org.testcontainers: INFO
