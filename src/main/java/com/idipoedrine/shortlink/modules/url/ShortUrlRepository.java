@@ -13,5 +13,7 @@ public interface ShortUrlRepository extends JpaRepository<ShortUrl, UUID> {
 
     Page<ShortUrl> findAllByOwnerId(UUID ownerId, Pageable pageable);
 
+    Optional<ShortUrl> findByShortCode(String shortCode);
+
     boolean existsByShortCode(String shortCode);
 }
