@@ -27,6 +27,7 @@ public class ShortUrlService {
     private final UserRepository userRepository;
     private final ShortCodeGenerator shortCodeGenerator;
     private final DestinationUrlValidator destinationUrlValidator;
+    private final ShortUrlCache shortUrlCache;
     private final ShortUrlMapper mapper;
 
     @Transactional
@@ -67,12 +68,16 @@ public class ShortUrlService {
             shortUrl.setExpiresAt(request.expiresAt());
         }
 
-        return mapper.toResponse(shortUrlRepository.save(shortUrl));
+        ShortUrl saved = shortUrlRepository.save(shortUrl);
+        shortUrlCache.evict(saved.getShortCode());
+        return mapper.toResponse(saved);
     }
 
     @Transactional
     public void delete(UUID ownerId, UUID id) {
-        shortUrlRepository.delete(findOwned(ownerId, id));
+        ShortUrl shortUrl = findOwned(ownerId, id);
+        shortUrlRepository.delete(shortUrl);
+        shortUrlCache.evict(shortUrl.getShortCode());
     }
 
     //===================== Private Helpers =================================================
