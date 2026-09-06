@@ -18,13 +18,14 @@ public class JwtService {
     private final JwtProperties jwtProperties;
 
     private SecretKey signingKey() {
-        byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.getSecret());
+        byte[] keyBytes = Base64.getDecoder().decode(jwtProperties.secret());
+
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
     public String generateAccessToken(String subject) {
         Date now = new Date();
-        Date expiry = new Date(now.getTime() + jwtProperties.getAccessExpiration());
+        Date expiry = new Date(now.getTime() + jwtProperties.accessExpiration());
         return Jwts.builder()
                 .subject(subject)
                 .issuedAt(now)

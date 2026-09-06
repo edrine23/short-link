@@ -61,6 +61,7 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.UNAUTHORIZED, "Invalid email or password", request);
     }
 
+    // ------------------- Private Helper ----------------------------------------------
     private ResponseEntity<ApiError> build(HttpStatus status, String message, HttpServletRequest request) {
         ApiError apiError = ApiError.of(
                 status.value(),
