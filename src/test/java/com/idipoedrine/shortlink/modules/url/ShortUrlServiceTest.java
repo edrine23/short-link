@@ -38,6 +38,8 @@ class ShortUrlServiceTest {
     private DestinationUrlValidator destinationUrlValidator;
     @Mock
     private ShortUrlMapper mapper;
+    @Mock
+    private ShortUrlCache shortUrlCache;
 
     @InjectMocks
     private ShortUrlService shortUrlService;
@@ -110,17 +112,30 @@ class ShortUrlServiceTest {
     }
 
     @Test
-    void updatesOnlyOwnedShortUrl() {
+    void updatesOnlyOwnedShortUrlAndEvictsItsCacheEntry() {
         UUID urlId = UUID.randomUUID();
-        ShortUrl existing = ShortUrl.builder().id(urlId).active(true).build();
+        ShortUrl existing = ShortUrl.builder().id(urlId).shortCode("abc1234").active(true).build();
         when(shortUrlRepository.findByIdAndOwnerId(urlId, ownerId)).thenReturn(Optional.of(existing));
         when(shortUrlRepository.save(existing)).thenReturn(existing);
         when(mapper.toResponse(existing)).thenReturn(
-                new ShortUrlResponse(urlId, null, null, null, false, null, null));
+                new ShortUrlResponse(urlId, null, "abc1234", null, false, null, null));
 
         ShortUrlResponse response = shortUrlService.update(ownerId, urlId, new UpdateShortUrlRequest(false, null));
 
         assertThat(existing.isActive()).isFalse();
         assertThat(response.active()).isFalse();
+        verify(shortUrlCache).evict("abc1234");
+    }
+
+    @Test
+    void deletingAShortUrlEvictsItsCacheEntry() {
+        UUID urlId = UUID.randomUUID();
+        ShortUrl existing = ShortUrl.builder().id(urlId).shortCode("del0001").build();
+        when(shortUrlRepository.findByIdAndOwnerId(urlId, ownerId)).thenReturn(Optional.of(existing));
+
+        shortUrlService.delete(ownerId, urlId);
+
+        verify(shortUrlRepository).delete(existing);
+        verify(shortUrlCache).evict("del0001");
     }
 }
