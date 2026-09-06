@@ -34,6 +34,6 @@ public class ShortUrlCache {
     }
 
     public static CachedShortUrlView viewOf(ShortUrl shortUrl) {
-        return new CachedShortUrlView(shortUrl.getOriginalUrl(), shortUrl.isActive(), shortUrl.getExpiresAt());
+        return new CachedShortUrlView(shortUrl.getId(), shortUrl.getOriginalUrl(), shortUrl.isActive(), shortUrl.getExpiresAt());
     }
 }

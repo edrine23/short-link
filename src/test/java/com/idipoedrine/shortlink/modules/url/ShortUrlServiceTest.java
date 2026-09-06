@@ -14,7 +14,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,6 +39,8 @@ class ShortUrlServiceTest {
     private ShortUrlMapper mapper;
     @Mock
     private ShortUrlCache shortUrlCache;
+    @Mock
+    private ShortUrlOwnershipGuard ownershipGuard;
 
     @InjectMocks
     private ShortUrlService shortUrlService;
@@ -105,7 +106,8 @@ class ShortUrlServiceTest {
     @Test
     void rejectsAccessToAnotherUsersShortUrl() {
         UUID someoneElsesUrlId = UUID.randomUUID();
-        when(shortUrlRepository.findByIdAndOwnerId(someoneElsesUrlId, ownerId)).thenReturn(Optional.empty());
+        when(ownershipGuard.requireOwned(ownerId, someoneElsesUrlId))
+                .thenThrow(new ResourceNotFoundException("Short URL not found"));
 
         assertThatThrownBy(() -> shortUrlService.get(ownerId, someoneElsesUrlId))
                 .isInstanceOf(ResourceNotFoundException.class);
@@ -115,7 +117,7 @@ class ShortUrlServiceTest {
     void updatesOnlyOwnedShortUrlAndEvictsItsCacheEntry() {
         UUID urlId = UUID.randomUUID();
         ShortUrl existing = ShortUrl.builder().id(urlId).shortCode("abc1234").active(true).build();
-        when(shortUrlRepository.findByIdAndOwnerId(urlId, ownerId)).thenReturn(Optional.of(existing));
+        when(ownershipGuard.requireOwned(ownerId, urlId)).thenReturn(existing);
         when(shortUrlRepository.save(existing)).thenReturn(existing);
         when(mapper.toResponse(existing)).thenReturn(
                 new ShortUrlResponse(urlId, null, "abc1234", null, false, null, null));
@@ -131,7 +133,7 @@ class ShortUrlServiceTest {
     void deletingAShortUrlEvictsItsCacheEntry() {
         UUID urlId = UUID.randomUUID();
         ShortUrl existing = ShortUrl.builder().id(urlId).shortCode("del0001").build();
-        when(shortUrlRepository.findByIdAndOwnerId(urlId, ownerId)).thenReturn(Optional.of(existing));
+        when(ownershipGuard.requireOwned(ownerId, urlId)).thenReturn(existing);
 
         shortUrlService.delete(ownerId, urlId);
 

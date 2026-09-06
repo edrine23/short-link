@@ -3,12 +3,14 @@ package com.idipoedrine.shortlink.modules.redirect;
 import com.idipoedrine.shortlink.common.exception.ResourceNotFoundException;
 import com.idipoedrine.shortlink.common.exception.ShortUrlInactiveException;
 import com.idipoedrine.shortlink.common.exception.UrlExpiredException;
+import com.idipoedrine.shortlink.modules.analytics.UrlVisitedEvent;
 import com.idipoedrine.shortlink.modules.url.CachedShortUrlView;
 import com.idipoedrine.shortlink.modules.url.ShortUrl;
 import com.idipoedrine.shortlink.modules.url.ShortUrlCache;
 import com.idipoedrine.shortlink.modules.url.ShortUrlRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -21,14 +23,11 @@ public class RedirectService {
 
     private final ShortUrlRepository shortUrlRepository;
     private final ShortUrlCache shortUrlCache;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public URI resolve(String shortCode) {
+    public URI resolve(String shortCode, String userAgent, String referrer) {
         CachedShortUrlView view = shortUrlCache.get(shortCode).orElseGet(() -> loadAndCache(shortCode));
 
-        // Active/expiry are evaluated fresh on every call, cache hit or miss.
-        // A cached entry can become expired in real time while it's still
-        // sitting in the cache — the cache only ever saves the DB round-trip,
-        // never this freshness decision (plan doc, section 11.3).
         if (!view.active()) {
             log.info("Redirect blocked: {} is inactive", shortCode);
             throw new ShortUrlInactiveException("This link has been disabled");
@@ -38,6 +37,7 @@ public class RedirectService {
             throw new UrlExpiredException("This link has expired");
         }
 
+        eventPublisher.publishEvent(new UrlVisitedEvent(view.id(), Instant.now(), userAgent, referrer));
         return URI.create(view.originalUrl());
     }
 
