@@ -53,6 +53,14 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred", request);
     }
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<ApiError> handleAuthenticationException(HttpServletRequest request) {
+        log.warn("Authentication failed on {}", request.getRequestURI());
+        // Deliberately generic — "invalid email" vs "invalid password" would
+        // let an attacker enumerate registered accounts.
+        return build(HttpStatus.UNAUTHORIZED, "Invalid email or password", request);
+    }
+
     private ResponseEntity<ApiError> build(HttpStatus status, String message, HttpServletRequest request) {
         ApiError apiError = ApiError.of(
                 status.value(),
