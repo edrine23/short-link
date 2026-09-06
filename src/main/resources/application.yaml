@@ -13,10 +13,18 @@ spring:
     enabled: true
     baseline-on-migrate: false
 
-  jwt:
-    secret: ${JWT_SECRET}
-    access-expiration: ${JWT_ACCESS_EXPIRATION}
-    refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
+#-------------- Custom Application properties ----------------------------------
+app:
+  base-url: ${APP_BASE_URL:http://localhost:8080}
+
+
+#--------------- Jwt property configurations ----------------------------------
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: ${JWT_ACCESS_EXPIRATION}
+  refresh-expiration: ${JWT_REFRESH_EXPIRATION}
+
 
 #-------------- Actuator endpoint management--------------------------------
 management:
