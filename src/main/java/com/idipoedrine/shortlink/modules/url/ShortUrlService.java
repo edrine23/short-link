@@ -28,6 +28,7 @@ public class ShortUrlService {
     private final ShortCodeGenerator shortCodeGenerator;
     private final DestinationUrlValidator destinationUrlValidator;
     private final ShortUrlCache shortUrlCache;
+    private final ShortUrlOwnershipGuard ownershipGuard;
     private final ShortUrlMapper mapper;
 
     @Transactional
@@ -54,12 +55,11 @@ public class ShortUrlService {
 
     @Transactional(readOnly = true)
     public ShortUrlResponse get(UUID ownerId, UUID id) {
-        return mapper.toResponse(findOwned(ownerId, id));
+        return mapper.toResponse(ownershipGuard.requireOwned(ownerId, id));
     }
-
     @Transactional
     public ShortUrlResponse update(UUID ownerId, UUID id, UpdateShortUrlRequest request) {
-        ShortUrl shortUrl = findOwned(ownerId, id);
+        ShortUrl shortUrl = ownershipGuard.requireOwned(ownerId, id);
 
         if (request.active() != null) {
             shortUrl.setActive(request.active());
@@ -75,22 +75,12 @@ public class ShortUrlService {
 
     @Transactional
     public void delete(UUID ownerId, UUID id) {
-        ShortUrl shortUrl = findOwned(ownerId, id);
+        ShortUrl shortUrl = ownershipGuard.requireOwned(ownerId, id);
         shortUrlRepository.delete(shortUrl);
         shortUrlCache.evict(shortUrl.getShortCode());
     }
 
     //===================== Private Helpers =================================================
-    /**
-     * Fetches a ShortUrl only if it belongs to the given owner. Deliberately
-     * does not distinguish "doesn't exist" from "exists but isn't yours" —
-     * both return 404, so ownership can't be probed by trying ids that
-     * belong to someone else (plan doc, section 8).
-     */
-    private ShortUrl findOwned(UUID ownerId, UUID id) {
-        return shortUrlRepository.findByIdAndOwnerId(id, ownerId)
-                .orElseThrow(() -> new ResourceNotFoundException("Short URL not found"));
-    }
 
     private ShortUrl saveWithCollisionRetry(ShortUrl shortUrl) {
         try {
